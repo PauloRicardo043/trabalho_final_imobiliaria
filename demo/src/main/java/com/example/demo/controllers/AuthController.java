@@ -51,14 +51,21 @@ public class AuthController {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     UsernamePasswordAuthenticationToken.unauthenticated(login.getEmail(), login.getSenha()));
+
             UserDetails user = (UserDetails) authentication.getPrincipal();
-            user.getAuthorities().stream()
+
+            String perfil = user.getAuthorities().stream()
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException("Usuário sem permissão configurada."))
                     .getAuthority();
-            return ResponseEntity.ok(new TokenDTO(jwtService.generateToken(user), "Bearer"));
+
+            String token = jwtService.generateToken(user);
+
+            return ResponseEntity.ok(new TokenDTO(token, "Bearer", perfil));
+
         } catch (BadCredentialsException exception) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "E-mail ou senha inválidos.");
         }
     }
+
 }
